@@ -35,7 +35,7 @@ namespace _Assets.Scripts.Networking.Services
 
         public async void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
         {
-            if (runner.IsServer)
+            if (!runner.IsServer)
                 return;
             
             await _playerFactory.CreatePlayer(player);
