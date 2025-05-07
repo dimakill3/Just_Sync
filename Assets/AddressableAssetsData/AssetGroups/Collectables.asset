@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Collectables
+  m_EditorClassIdentifier: 
+  m_GroupName: Collectables
+  m_GUID: a5aba7cec5d8e8842b20573ff57c32de
+  m_SerializeEntries:
+  - m_GUID: b76de77e9e36a1c44b094c10711555eb
+    m_Address: FirstAid
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 7301dc1e6920b9747868b476e3fb8a52, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: ff684e76dc794ff4080e1841487eb635, type: 2}
+    - {fileID: 11400000, guid: c390e99d13e55b543bc0a9fbeac63c71, type: 2}
