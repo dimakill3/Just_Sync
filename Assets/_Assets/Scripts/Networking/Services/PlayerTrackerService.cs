@@ -19,22 +19,15 @@ namespace _Assets.Scripts.Networking.Services
         private readonly IPlayersService _playersService;
         private readonly INetworkInitializer _initializer;
         private readonly IObjectsInitializer _objectsInitializer;
-        private readonly GameConfig _gameConfig;
-        private readonly IInputService _inputService;
-        private readonly Camera _camera;
 
         public PlayerTrackerService(IPlayerFactory playerFactory, NetworkRunner networkNetworkRunner,
-            IPlayersService playersService, INetworkInitializer initializer, IObjectsInitializer objectsInitializer,
-            GameConfig gameConfig, IInputService inputService, Camera camera)
+            IPlayersService playersService, INetworkInitializer initializer, IObjectsInitializer objectsInitializer)
         {
             _playerFactory = playerFactory;
             _networkRunner = networkNetworkRunner;
             _playersService = playersService;
             _initializer = initializer;
             _objectsInitializer = objectsInitializer;
-            _gameConfig = gameConfig;
-            _inputService = inputService;
-            _camera = camera;
         }
 
         public void Initialize() =>
@@ -92,7 +85,7 @@ namespace _Assets.Scripts.Networking.Services
                 return;
 
             var playerComponent = networkObj.GetComponent<Player>();
-            playerComponent.Initialize(_gameConfig, _camera.transform, _inputService);
+            _objectsInitializer.InitializePlayer(playerComponent);
             _playersService.AddPlayer(player, playerComponent);
 
             if (_networkRunner.IsServer)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using _Assets.Scripts.Game.InputLogic;
 using Fusion;
 using Fusion.Sockets;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace _Assets.Scripts.Game.PlayerLogic.Movement
@@ -22,15 +21,11 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
         private Vector3 _lookInput;
         private bool _jumpInput;
 
-        private void Start()
-        {
+        private void Start() =>
             Runner.AddCallbacks(this);
-        }
 
-        public void OnDestroy()
-        {
+        public void OnDestroy() =>
             Runner.RemoveCallbacks(this);
-        }
 
         public void Initialize(IInputService inputService)
         {
@@ -81,6 +76,17 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
             
             input.Set(inputData);
         }
+        
+        public void OnPlayerLeft (NetworkRunner runner, PlayerRef player)
+        {
+            if(!Object.HasInputAuthority)
+                return;
+
+            var playerObject = runner.GetPlayerObject(player);
+            
+            if (playerObject == Object)
+                runner.Despawn(Object);
+        }
 
         public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
         {
@@ -91,10 +97,6 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
         }
 
         public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
-        {
-        }
-
-        public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
         {
         }
 
