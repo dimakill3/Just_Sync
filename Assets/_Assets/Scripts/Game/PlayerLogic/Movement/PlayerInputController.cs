@@ -11,57 +11,46 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
     {
         public Vector2 MoveInput;
         public Vector2 LookInput;
+        public float YawInput;
         public bool JumpInput;
     }
 
     public class PlayerInputController : NetworkBehaviour, INetworkRunnerCallbacks
     {
-        private IInputService _inputService;
-        private Vector3 _movementInput;
-        private Vector3 _lookInput;
+        private Vector2 _movementInput;
+        private Vector2 _lookInput;
+        private float _accumulatedYaw;
         private bool _jumpInput;
+
+        private IInputService _inputService;
+        private NetworkRunner _networkRunner;
 
         private void Start() =>
             Runner.AddCallbacks(this);
 
-        public void OnDestroy() =>
+        private void OnDestroy() =>
             Runner.RemoveCallbacks(this);
 
         public void Initialize(IInputService inputService)
         {
-            if (Object.InputAuthority == Runner.LocalPlayer)
-            {
-                _inputService = inputService;
-                _inputService.MoveInput += MoveInput;
-                _inputService.LookInput += LookInput;
-                _inputService.JumpInput += JumpInput;
-            }
+            _inputService = inputService;
+            _inputService.MoveInput += MoveInput;
+            _inputService.LookInput += LookInput;
+            _inputService.JumpInput += JumpInput;
         }
 
-        private void MoveInput(Vector2 moveInput)
-        {
-            if(!Object.HasInputAuthority)
-                return;
-
+        private void MoveInput(Vector2 moveInput) =>
             _movementInput = moveInput;
-        }
 
         private void LookInput(Vector2 lookInput)
         {
-            if(!Object.HasInputAuthority)
-                return;
-            
             _lookInput = lookInput;
+            _accumulatedYaw += lookInput.x;
         }
 
-        private void JumpInput(bool jumpInput)
-        {
-            if(!Object.HasInputAuthority)
-                return;
-
+        private void JumpInput(bool jumpInput) =>
             _jumpInput = jumpInput;
-        }
-        
+
         public void OnInput(NetworkRunner runner, NetworkInput input)
         {
             if(!Object.HasInputAuthority)
@@ -71,21 +60,13 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
             {
                 MoveInput = _movementInput,
                 LookInput = _lookInput,
+                YawInput = _accumulatedYaw,
                 JumpInput = _jumpInput
             };
             
             input.Set(inputData);
-        }
-        
-        public void OnPlayerLeft (NetworkRunner runner, PlayerRef player)
-        {
-            if(!Object.HasInputAuthority)
-                return;
-
-            var playerObject = runner.GetPlayerObject(player);
             
-            if (playerObject == Object)
-                runner.Despawn(Object);
+            _accumulatedYaw = 0f;
         }
 
         public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
@@ -97,6 +78,10 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
         }
 
         public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
+        {
+        }
+
+        public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
         {
         }
 

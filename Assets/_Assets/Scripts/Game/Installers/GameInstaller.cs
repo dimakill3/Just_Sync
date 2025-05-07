@@ -14,7 +14,6 @@ namespace _Assets.Scripts.Game.Installers
             BindFactories();
             BindSceneComponents();
             BindServices();
-            BindTrackSystems();
         }
 
         private void BindSceneComponents()
@@ -50,20 +49,8 @@ namespace _Assets.Scripts.Game.Installers
         private void BindServices()
         {
             Container
-                .Bind<IPlayersService>()
-                .To<PlayersService>()
-                .AsSingle();
-            
-            Container
                 .Bind<IObjectsInitializer>()
                 .To<ObjectsInitializer>()
-                .AsSingle();
-        }
-
-        private void BindTrackSystems()
-        {
-            Container
-                .BindInterfacesAndSelfTo<PlayerTrackerService>()
                 .AsSingle();
         }
     }

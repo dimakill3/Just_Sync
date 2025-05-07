@@ -31,9 +31,6 @@ namespace _Assets.Scripts.Game.Collectables
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!Object.HasInputAuthority)
-                return;
-            
             var collector = other.GetComponent<ICollector>();
             if (collector != null)
                 Collect(collector);

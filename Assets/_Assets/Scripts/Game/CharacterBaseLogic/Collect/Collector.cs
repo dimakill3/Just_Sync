@@ -1,4 +1,5 @@
 ﻿using _Assets.Scripts.Game.CharacterBaseLogic.Health;
+using Fusion;
 using UnityEngine;
 
 namespace _Assets.Scripts.Game.CharacterBaseLogic.Collect

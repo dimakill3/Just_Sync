@@ -1,8 +1,8 @@
 ﻿using System;
-using _Assets.Scripts.Core.Infrastructure.Configs;
 using _Assets.Scripts.Game.CharacterBaseLogic.Collect;
 using _Assets.Scripts.Game.CharacterBaseLogic.DamageDealer;
 using _Assets.Scripts.Game.CharacterBaseLogic.Health;
+using _Assets.Scripts.Game.Configs;
 using _Assets.Scripts.Game.InputLogic;
 using _Assets.Scripts.Game.PlayerLogic.Movement;
 using _Assets.Scripts.Game.Utils;
@@ -24,19 +24,24 @@ namespace _Assets.Scripts.Game.PlayerLogic
         [SerializeField] private PlayerInputController inputController;
         [SerializeField] private HeroAnimator animator;
         
-        public void Initialize(GameConfig gameConfig, Transform cameraTransform, IInputService inputService)
+        public void InitializeOnLocal(PlayerConfig playerConfig, Transform cameraTransform, IInputService inputService)
         {
-            var heroConfig = gameConfig.PlayerConfig;
-
-            inputController.Initialize(inputService);
-            health.Initialize(heroConfig.MaxHealth);
-            movement.Initialize(heroConfig.MoveSpeed, heroConfig.JumpHeight);
-            looking.Initialize(heroConfig.LookSensitivity, cameraTransform);
             healthView.Initialize(health);
-            heightDamageDealer.Initialize(heroConfig.DamageableHeight, movement, health);
-            collector.Initialize(health);
+            inputController.Initialize(inputService);
+            movement.Initialize(playerConfig.MoveSpeed, playerConfig.JumpHeight, playerConfig.LookSensitivity);
+            looking.Initialize(playerConfig.LookSensitivity, cameraTransform, inputService);
+            looking.enabled = true;
             animator.Initialize(health);
+        }
 
+        public void InitializeOnOthers(PlayerConfig playerConfig)
+        {
+            health.Initialize(playerConfig.MaxHealth);
+            healthView.Initialize(health);
+            collector.Initialize(health);
+            heightDamageDealer.Initialize(playerConfig.DamageableHeight, movement, health);
+            looking.enabled = false;
+            
             health.OnDeath += HandleDeath;
         }
 

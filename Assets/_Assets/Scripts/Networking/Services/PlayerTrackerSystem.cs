@@ -1,39 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using _Assets.Scripts.Core.Infrastructure.Configs;
-using _Assets.Scripts.Game.InputLogic;
 using _Assets.Scripts.Game.PlayerLogic;
 using _Assets.Scripts.Game.PlayerLogic.Factory;
 using _Assets.Scripts.Networking.Initializer;
+using Cysharp.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
-using UnityEngine;
-using IInitializable = Zenject.IInitializable;
+using Zenject;
 
 namespace _Assets.Scripts.Networking.Services
 {
-    public class PlayerTrackerService : INetworkRunnerCallbacks, IInitializable, IDisposable
+    public class PlayerTrackerSystem : NetworkBehaviour, INetworkRunnerCallbacks
     {
-        private readonly IPlayerFactory _playerFactory;
-        private readonly NetworkRunner _networkRunner;
-        private readonly IPlayersService _playersService;
-        private readonly INetworkInitializer _initializer;
-        private readonly IObjectsInitializer _objectsInitializer;
+        private IPlayerFactory _playerFactory;
+        private NetworkRunner _networkRunner;
+        private INetworkInitializer _initializer;
+        private IObjectsInitializer _objectsInitializer;
 
-        public PlayerTrackerService(IPlayerFactory playerFactory, NetworkRunner networkNetworkRunner,
-            IPlayersService playersService, INetworkInitializer initializer, IObjectsInitializer objectsInitializer)
+        [Networked, Capacity(30)] public NetworkDictionary<PlayerRef, Player> Players { get; }
+        
+        [Inject]
+        public void Construct(IPlayerFactory playerFactory, NetworkRunner networkNetworkRunner,
+            INetworkInitializer initializer, IObjectsInitializer objectsInitializer)
         {
             _playerFactory = playerFactory;
             _networkRunner = networkNetworkRunner;
-            _playersService = playersService;
             _initializer = initializer;
             _objectsInitializer = objectsInitializer;
         }
 
-        public void Initialize() =>
+        private void Start() =>
             _networkRunner.AddCallbacks(this);
 
-        public void Dispose() =>
+        public void OnDestroy() =>
             _networkRunner.RemoveCallbacks(this);
 
         public async void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
@@ -41,13 +40,10 @@ namespace _Assets.Scripts.Networking.Services
             if (!runner.IsServer)
                 return;
             
-            await _playerFactory.CreatePlayer(player);
+            var playerObject = await _playerFactory.CreatePlayer(player);
+            Players.Add(player, playerObject);
             RPC_PlayerJoined(player);
-            
         }
-
-        public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) =>
-            _initializer.LeftGame();
 
         public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
         {
@@ -56,59 +52,57 @@ namespace _Assets.Scripts.Networking.Services
             
             if (player != runner.LocalPlayer)
             {
-                var obj = runner.GetPlayerObject(player);
-                if (obj != null)
-                    runner.Despawn(obj);
-                
-                RPC_PlayerLeft(player);
+                var playerObject = Players[player];
+                if (playerObject != null)
+                {
+                    playerObject.OnDeath -= HandlePlayerDeath;
+                    runner.Despawn(playerObject.Object);
+                    Players.Remove(player);
+                }
             }
             else
                 RPC_HostLeft();
         }
 
-        public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) =>
+        public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) =>
             _initializer.LeftGame();
         
+        public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) =>
+            _initializer.LeftGame();
+
         [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-        private void RPC_PlayerLeft(PlayerRef player) =>
-            _playersService.Remove(player);
-        
+        private async void RPC_PlayerJoined(PlayerRef player)
+        {
+            var playerObject = Players[player];
+            while (playerObject == null)
+            {
+                await UniTask.Yield();
+                playerObject = Players[player];
+            }
+            
+            _objectsInitializer.InitializePlayer(playerObject);
+
+            if (_networkRunner.IsServer)
+                playerObject.OnDeath += HandlePlayerDeath;
+        }
+
         [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
         private void RPC_HostLeft() =>
             _initializer.LeftGame();
-
-        [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-        private void RPC_PlayerJoined(PlayerRef player)
-        {
-            var networkObj = _networkRunner.GetPlayerObject(player);
-            if (networkObj == null)
-                return;
-
-            var playerComponent = networkObj.GetComponent<Player>();
-            _objectsInitializer.InitializePlayer(playerComponent);
-            _playersService.AddPlayer(player, playerComponent);
-
-            if (_networkRunner.IsServer)
-            {
-                playerComponent.OnDeath -= HandlePlayerDeath;
-                playerComponent.OnDeath += HandlePlayerDeath;
-            }
-        }
 
         private void HandlePlayerDeath(PlayerRef player)
         {
             if (!_networkRunner.IsServer)
                 return;
 
-            var playerObj = _networkRunner.GetPlayerObject(player);
-            if (playerObj == null)
+            var playerObject = Players[player];
+            if (playerObject == null)
                 return;
-
-            var playerComponent = playerObj.GetComponent<Player>();
-            playerComponent.RPC_Respawn();
+            
+            playerObject.RPC_Respawn();
         }
         
-        #region INetworkRunnerCallbacks
+        #region Unused Callbacks
 
         public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
         public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }

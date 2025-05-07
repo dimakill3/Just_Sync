@@ -13,12 +13,15 @@ namespace _Assets.Scripts.Game.CharacterBaseLogic.DamageDealer
 
         public void Initialize(float damageableHeight, IGroundLander groundLander, HealthComponent health)
         {
-            _damageableHeight = damageableHeight;
-            _groundLander = groundLander;
-            _health = health;
-
             if (Object.HasStateAuthority)
-                _groundLander.Landed += OnLanded;
+            {
+                _damageableHeight = damageableHeight;
+                _groundLander = groundLander;
+                _health = health;
+
+                if (Object.HasStateAuthority)
+                    _groundLander.Landed += OnLanded;
+            }
         }
 
         private void OnDestroy()

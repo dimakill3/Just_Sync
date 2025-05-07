@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: PlayerConfig
   m_EditorClassIdentifier: 
   MaxHealth: 100
-  MoveSpeed: 5
+  MoveSpeed: 12
   JumpHeight: 2
-  LookSensitivity: 2
+  LookSensitivity: 5
   DamageableHeight: 5
   AddressableId:
     m_AssetGUID: 4534b9cc6330aed499be54b02abf5283

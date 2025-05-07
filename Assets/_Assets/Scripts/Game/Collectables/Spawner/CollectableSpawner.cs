@@ -71,7 +71,9 @@ namespace _Assets.Scripts.Game.Collectables.Spawner
                     SpawnCollectable();
                     _currentCollectablesCount++;
                 }
-                
+                else
+                    break;
+
                 await UniTask.WaitForFixedUpdate();
             }
         }

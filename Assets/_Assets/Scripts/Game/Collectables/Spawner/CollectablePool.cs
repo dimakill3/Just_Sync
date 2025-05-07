@@ -57,7 +57,7 @@ namespace _Assets.Scripts.Game.Collectables.Spawner
             collectablePrefab = _prefabPools[key];
             
             var pool = new ObjectPool<Collectable>(
-                createFunc: () => CreateInstance(collectablePrefab),
+                createFunc: () => CreateInstance(collectablePrefab, config),
                 actionOnGet: c => c.gameObject.SetActive(true),
                 actionOnRelease: c => c.gameObject.SetActive(false),
                 actionOnDestroy: c => Despawn(c),
@@ -69,11 +69,12 @@ namespace _Assets.Scripts.Game.Collectables.Spawner
             return pool;
         }
 
-        private Collectable CreateInstance(Collectable collectablePrefab)
+        private Collectable CreateInstance(Collectable collectablePrefab, CollectableConfig collectableConfig)
         {
-            var coll = _collectableFactory.CreateCollectable(collectablePrefab);
-            coll.Collected += Release;
-            return coll;
+            var collectable = _collectableFactory.CreateCollectable(collectablePrefab);
+            collectable.Initialize(collectableConfig);
+            collectable.Collected += Release;
+            return collectable;
         }
 
         private void Release(Collectable coll)

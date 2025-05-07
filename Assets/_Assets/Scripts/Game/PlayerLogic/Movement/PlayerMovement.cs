@@ -7,6 +7,7 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
 {
     public class PlayerMovement : NetworkBehaviour, IGroundLander
     {
+        [SerializeField] private LayerMask groundMask;
         public event Action<float> Landed;
         
         [SerializeField] private NetworkCharacterController characterController;
@@ -18,35 +19,45 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
         private bool _wasGroundedLastFrame;
         private bool _isGrounded;
         private float _highestYWhileFalling;
+        private bool _isInitialized = false;
+        private float _mouseSensitivity;
 
-        public void Initialize(float moveSpeed, float jumpHeight)
+        public void Initialize(float moveSpeed, float jumpHeight, float mouseSensitivity)
         {
             _moveSpeed = moveSpeed;
             _jumpHeight = jumpHeight;
-            
+            _mouseSensitivity = mouseSensitivity;
+
+            Warp(transform.position);
+            characterController.enabled = true;
             _velocity = Vector3.zero;
             _isGrounded = characterController.Grounded;
             _wasGroundedLastFrame = _isGrounded;
             _highestYWhileFalling = transform.position.y;
+            
+            _isInitialized = true;
         }
 
         public override void FixedUpdateNetwork()
         {
-            UpdateGroundState();
-            ApplyGravity();
+            if (!_isInitialized)
+                return;
             
-            if (Object.HasInputAuthority && GetInput<NetworkInputData>(out var inputData))
+            //UpdateGroundState();
+            //ApplyGravity();
+            
+            if (Object.HasStateAuthority && GetInput<NetworkInputData>(out var inputData))
             {
+                ProcessRotation(inputData.YawInput);
                 ProcessMovementInput(inputData.MoveInput);
                 ProcessJumpInput(inputData.JumpInput);
             }
 
             characterController.Move(new Vector3(_velocity.x * _moveSpeed, _velocity.y, _velocity.z * _moveSpeed) * Runner.DeltaTime);
-            LogDebugInfo();
         }
 
         public void Warp(Vector3 getRandomMapPosition) =>
-            characterController.transform.position = getRandomMapPosition;
+            characterController.Teleport(getRandomMapPosition);
 
         private void UpdateGroundState()
         {
@@ -84,14 +95,16 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
             _velocity.y = Mathf.Max(_velocity.y, characterController.gravity);
         }
 
+        private void ProcessRotation(float inputDataYawInput) =>
+            transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y + inputDataYawInput * _mouseSensitivity, 0f);
+
         private void ProcessMovementInput(Vector2 inputData)
         {
-            Vector3 inputDirection = transform.right * inputData.x + transform.forward * inputData.y;
+            var inputDirection = transform.right * inputData.x + transform.forward * inputData.y;
 
             if (inputDirection.sqrMagnitude > 1f)
                 inputDirection.Normalize();
-
-            //Vector3 movement = inputDirection * _moveSpeed * Runner.DeltaTime;
+            
             _velocity.x = inputDirection.x;
             _velocity.z = inputDirection.z;
         }
@@ -104,8 +117,5 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
 
         private void Jump() =>
             _velocity.y = Mathf.Sqrt(_jumpHeight * -2f * characterController.gravity);
-
-        private void LogDebugInfo() =>
-            Debug.Log($"Velocity: {_velocity}, IsGrounded: {_isGrounded}");
     }
 }
