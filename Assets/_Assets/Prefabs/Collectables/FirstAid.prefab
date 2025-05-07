@@ -184,6 +184,7 @@ GameObject:
   - component: {fileID: 1544877096665841057}
   - component: {fileID: 3396869874594286942}
   - component: {fileID: 4946882079133490869}
+  - component: {fileID: 5709746081873011894}
   - component: {fileID: 2999981557343494669}
   m_Layer: 0
   m_Name: FirstAid
@@ -226,6 +227,7 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
+  - {fileID: 5709746081873011894}
   - {fileID: 2999981557343494669}
   ForceRemoteRenderTimeframe: 0
 --- !u!65 &3396869874594286942
@@ -266,6 +268,23 @@ Animation:
   m_AnimatePhysics: 0
   m_UpdateMode: 0
   m_CullingType: 0
+--- !u!114 &5709746081873011894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7975998872709633962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0
 --- !u!114 &2999981557343494669
 MonoBehaviour:
   m_ObjectHideFlags: 0

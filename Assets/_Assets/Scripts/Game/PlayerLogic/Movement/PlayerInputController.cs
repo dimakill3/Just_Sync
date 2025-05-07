@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using _Assets.Scripts.Game.InputLogic;
 using Fusion;
 using Fusion.Sockets;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace _Assets.Scripts.Game.PlayerLogic.Movement
@@ -25,7 +26,12 @@ namespace _Assets.Scripts.Game.PlayerLogic.Movement
         {
             Runner.AddCallbacks(this);
         }
-        
+
+        public void OnDestroy()
+        {
+            Runner.RemoveCallbacks(this);
+        }
+
         public void Initialize(IInputService inputService)
         {
             if (Object.InputAuthority == Runner.LocalPlayer)

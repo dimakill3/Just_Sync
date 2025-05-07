@@ -47,8 +47,10 @@ namespace _Assets.Scripts.Game.PlayerLogic
             movement.Warp(MapUtil.GetRandomMapPosition());
         }
 
-        private void OnDestroy() =>
+        private void OnDestroy()
+        {
             health.OnDeath -= HandleDeath;
+        }
 
         private void HandleDeath() =>
             OnDeath?.Invoke(Object.InputAuthority);

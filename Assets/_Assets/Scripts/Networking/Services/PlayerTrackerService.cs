@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using _Assets.Scripts.Core.Infrastructure.Configs;
+using _Assets.Scripts.Game.InputLogic;
 using _Assets.Scripts.Game.PlayerLogic;
 using _Assets.Scripts.Game.PlayerLogic.Factory;
 using _Assets.Scripts.Networking.Initializer;
 using Fusion;
 using Fusion.Sockets;
+using UnityEngine;
 using IInitializable = Zenject.IInitializable;
 
 namespace _Assets.Scripts.Networking.Services
@@ -16,15 +19,22 @@ namespace _Assets.Scripts.Networking.Services
         private readonly IPlayersService _playersService;
         private readonly INetworkInitializer _initializer;
         private readonly IObjectsInitializer _objectsInitializer;
+        private readonly GameConfig _gameConfig;
+        private readonly IInputService _inputService;
+        private readonly Camera _camera;
 
         public PlayerTrackerService(IPlayerFactory playerFactory, NetworkRunner networkNetworkRunner,
-            IPlayersService playersService, INetworkInitializer initializer, IObjectsInitializer objectsInitializer)
+            IPlayersService playersService, INetworkInitializer initializer, IObjectsInitializer objectsInitializer,
+            GameConfig gameConfig, IInputService inputService, Camera camera)
         {
             _playerFactory = playerFactory;
             _networkRunner = networkNetworkRunner;
             _playersService = playersService;
             _initializer = initializer;
             _objectsInitializer = objectsInitializer;
+            _gameConfig = gameConfig;
+            _inputService = inputService;
+            _camera = camera;
         }
 
         public void Initialize() =>
@@ -40,6 +50,7 @@ namespace _Assets.Scripts.Networking.Services
             
             await _playerFactory.CreatePlayer(player);
             RPC_PlayerJoined(player);
+            
         }
 
         public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) =>
@@ -64,7 +75,7 @@ namespace _Assets.Scripts.Networking.Services
 
         public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) =>
             _initializer.LeftGame();
-
+        
         [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
         private void RPC_PlayerLeft(PlayerRef player) =>
             _playersService.Remove(player);
@@ -81,7 +92,7 @@ namespace _Assets.Scripts.Networking.Services
                 return;
 
             var playerComponent = networkObj.GetComponent<Player>();
-            _objectsInitializer.InitializePlayer(playerComponent);
+            playerComponent.Initialize(_gameConfig, _camera.transform, _inputService);
             _playersService.AddPlayer(player, playerComponent);
 
             if (_networkRunner.IsServer)
@@ -114,8 +125,8 @@ namespace _Assets.Scripts.Networking.Services
         public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
         public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
         public void OnInput(NetworkRunner runner, NetworkInput input) { }
-        public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
         public void OnConnectedToServer(NetworkRunner runner) { }
+        public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
         public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
         public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
         public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
